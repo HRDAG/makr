@@ -6,7 +6,7 @@
 cd $(git rev-parse --show-toplevel)/tests/data/task-0
 make
 cd ../task-1
-make
+make -f src/Makefile
 cd ../task-2
 make
 cd ../task-3
