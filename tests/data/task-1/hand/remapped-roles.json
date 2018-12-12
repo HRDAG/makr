@@ -1,0 +1,8 @@
+{"sender": "player",
+ "receiver": "player",
+ "cracker": "attacker",
+ "listener": "attacker",
+ "forger": "attacker",
+ "LEO": "attacker"}
+
+

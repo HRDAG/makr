@@ -1,0 +1,7 @@
+actor|role|weight|nchars|role_type|weighted_weight
+Alice|sender|125|5|player|125
+Bob|receiver|175|3|player|175
+Craig|cracker|190|5|attacker|380
+Eve|listener|130|3|attacker|260
+Mallory|forger|140|7|attacker|280
+Plod|LEO|225|4|attacker|450

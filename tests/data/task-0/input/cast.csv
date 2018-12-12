@@ -1,0 +1,9 @@
+actor|role|weight
+Alice|sender|125
+Bob|receiver|175
+Craig|cracker|190
+Eve|listener|130
+Mallory|forger|140
+Plod|LEO|225
+Zed|dead|190
+
