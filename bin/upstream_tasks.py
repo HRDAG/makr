@@ -89,7 +89,7 @@ def get_deps_from_make(task_path):
             deps.extend([d.strip() for d in white.split(line) if d.strip()])
 
     os.chdir(curwd)
-    return sorted(deps)
+    return sorted(set(deps))
 
 
 # ====================================================================

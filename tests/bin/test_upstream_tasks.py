@@ -57,4 +57,11 @@ def test_get_deps_from_make_3():
     assert deps == ['../task-0/input/cast.csv',
                     '../task-2/output/cast.csv', 'src/counter.py']
 
+
+def test_get_deps_from_make_4():
+    deps = ut.get_deps_from_make("../data/task-4")
+    assert deps == ['../task-1/input/cast.csv',
+                    '../task-3/output/counts.json',
+                    'src/write-report.py']
+
 # done.

@@ -7,6 +7,7 @@
 #
 import argparse
 import json
+import time
 from collections import Counter
 
 report = """
@@ -29,7 +30,8 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input1")
     parser.add_argument("--input3")
-    parser.add_argument("--output")
+    parser.add_argument("--output1")
+    parser.add_argument("--output2")
     return parser.parse_args()
 
 
@@ -48,6 +50,7 @@ def yield_role_type(ifile, role_type_fld):
 
 if __name__ == '__main__':
     args = get_args()
+    start_time = time.time()
 
     # calc a counter of role_types
     with open(args.input1, 'rt') as ifile:
@@ -60,7 +63,10 @@ if __name__ == '__main__':
     with open(args.input3, 'rt') as jfile:
         ctr.update(json.load(jfile))
 
-    with open(args.output, 'wt') as ofile:
+    with open(args.output1, 'wt') as ofile:
         ofile.write(report.format(**ctr))
+
+    with open(args.output2, 'wt') as jfile:
+        json.dump({'time_elapsed': (time.time() - start_time)}, jfile)
 
 # done.
