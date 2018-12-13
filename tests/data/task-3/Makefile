@@ -18,7 +18,15 @@ output/counts.json: \
 	python3 $< \
 		--input0=../task-0/output/cast.csv \
 		--input2=../task-2/output/cast.csv \
-		--output=output/counts.json
+		--output=$@
 
+output/counts-w-agg.json: \
+		src/count-w-agg.py \
+		../task-0/input/cast.csv \
+		../task-2/output/cast.csv
+	python3 $< \
+		--input0=../task-0/output/cast.csv \
+		--input2=../task-2/output/cast.csv \
+		--output=$@
 # done
 
