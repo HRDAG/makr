@@ -60,6 +60,40 @@ def get_git_root():
     return os.path.split(pth)[1]
 
 
+def exec_make(make_args):
+    ''' either simply make or make -f src/Makefile '''
+    assert make_args[0] == 'make'
+    if os.path.exists('src/Makefile'):
+        make_args.extend(["--makefile", "src/Makefile"])
+    elif not os.path.exists('Makefile'):
+        raise OSError(f"Makefile not found in {os.path.curdir}")
+    prox = subprocess.run(make_args, capture_output=True)
+    return prox.stdout.decode('utf-8')
+
+
+def get_deps_from_make(task_path):
+    ''' task_path: relative to cwd '''
+    curwd = abspath(os.path.curdir)
+    print(f"get_deps_from_make comes in w curwd={curwd}")
+    os.chdir(task_path)
+    assert is_a_task('.')
+    db = exec_make(['make', '--dry-run', '--print-data-base'])
+
+    tofilter = re.compile(r'^%|^#|^make|^\.|^\(%|^all|^clean')
+    white = re.compile(r'\s+')
+    deps = list()
+    for line in db.split(os.linesep):
+        # NB: the space after : rules out :=
+        if ": " in line and not tofilter.match(line):
+            line = line.split(":")[1]
+            deps.extend([d.strip() for d in white.split(line) if d.strip()])
+
+    os.chdir(curwd)
+    return sorted(deps)
+
+
+# ====================================================================
+
 def filelist(directory):
     """Get a list of files in directory, excluding any that start with '.'
        Returns absolute paths."""
@@ -98,7 +132,6 @@ def is_a_task(taskdir):
     ''' tests dir for presence of at least one task leaf '''
     has_input_or_output_or_src = any(exists(os.path.join(taskdir, subdir))
                                      for subdir in ("input", "output", "src"))
-    # sys.stderr.write("%s is a task? %s \n" % (dir, has_input_or_output_or_src))
     return has_input_or_output_or_src
 
 
