@@ -13,7 +13,7 @@ import collections
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input0")
+    parser.add_argument("--input1")
     parser.add_argument("--input2")
     parser.add_argument("--output")
     return parser.parse_args()
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     args = get_args()
     counts = collections.defaultdict(int)
 
-    with open(args.input0, 'rt') as ifile:
+    with open(args.input1, 'rt') as ifile:
         header = readrow(ifile.readline())
         rows = [header]
         weight_fld = header.index('weight')

@@ -6,17 +6,17 @@
 # makr/tests/data/task-3/Makefile
 #
 .PHONY: all clean
-all: output/counts.json
+all: output/counts.json output/counts-w-agg.json
 clean:
 	rm output/*
 
 
 output/counts.json: \
 		src/counter.py \
-		../task-0/input/cast.csv \
+		../task-1/output/cast.csv \
 		../task-2/output/cast.csv
 	python3 $< \
-		--input0=../task-0/output/cast.csv \
+		--input1=../task-1/output/cast.csv \
 		--input2=../task-2/output/cast.csv \
 		--output=$@
 
@@ -25,7 +25,7 @@ output/counts-w-agg.json: \
 		../task-0/input/cast.csv \
 		../task-2/output/cast.csv
 	python3 $< \
-		--input0=../task-0/output/cast.csv \
+		--input0=../task-0/input/cast.csv \
 		--input2=../task-2/output/cast.csv \
 		--output=$@
 # done
