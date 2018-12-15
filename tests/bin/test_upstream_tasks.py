@@ -12,12 +12,13 @@
 
 import os
 import os.path
+from pathlib import Path
 import pytest
 import sys
 sys.path.append("../../bin")
 
 import upstream_tasks as ut
-MODULE_PATH = os.path.abspath(os.path.curdir)
+MODULE_PATH = Path.cwd()
 
 
 def setup_function():
@@ -26,7 +27,7 @@ def setup_function():
 
 
 def test_test_from_bin():
-    assert MODULE_PATH.endswith("tests/bin")
+    assert str(MODULE_PATH).endswith("tests/bin")
 
 
 def test_get_git_root():
@@ -38,7 +39,7 @@ def test_is_a_task_yes():
 
 
 def test_is_a_task_no():
-    assert not ut.is_a_task(os.path.abspath('.'))
+    assert not ut.is_a_task(str(Path.cwd()))
 
 
 def test_get_task_path():
@@ -56,8 +57,8 @@ def test_get_task_path_symlink():
 
 
 def test_get_task_path_notproj():
-    with pytest.raises(FileNotFoundError):
-        ut.get_task_path(os.path.expanduser('~'))
+    with pytest.raises(OSError):
+        ut.get_task_path(Path.home())
 
 
 def test_exec_make_empty_args():
@@ -82,7 +83,7 @@ def test_exec_make_db_correct0():
 
 
 def test_exec_make_db_correct1():
-    os.chdir("../task-1")   # task-1/src/Makefile
+    os.chdir("../data/task-1")   # task-1/src/Makefile
     db = ut.exec_make(['make', '-n', '--print-data-base'])
     assert db.startswith("make:")
 
