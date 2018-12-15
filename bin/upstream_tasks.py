@@ -53,11 +53,32 @@ def get_args():
     return parser.parse_args()
 
 
+def is_a_task(taskdir):
+    ''' tests dir for presence of at least one task leaf '''
+    task_subdirs = ("input", "output", "src", "frozen", "hand")
+    has_input_or_output_or_src = any(exists(os.path.join(taskdir, subdir))
+                                     for subdir in task_subdirs)
+    return has_input_or_output_or_src
+
+
 def get_git_root():
     prox = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
                           capture_output=True)
     pth = prox.stdout.strip().decode('utf-8')
     return os.path.split(pth)[1]
+
+
+def get_task_path(tpath):
+    git_root = get_git_root()
+    tpath = os.path.realpath(tpath)
+    proj_re = re.compile(r'.*?/(' + git_root + '/.*)')
+    mtch = proj_re.search(tpath)
+    if not mtch:
+        errmsg = f"git_root=={git_root}, tpath=={tpath}, cannot find project"
+        raise FileNotFoundError(errmsg)
+    tpath = mtch.groups()[0]
+    # get the project part.
+    return tpath
 
 
 def exec_make(make_args):
@@ -66,7 +87,7 @@ def exec_make(make_args):
     if os.path.exists('src/Makefile'):
         make_args.extend(["--makefile", "src/Makefile"])
     elif not os.path.exists('Makefile'):
-        raise OSError(f"Makefile not found in {os.path.curdir}")
+        raise FileNotFoundError(f"Makefile not found in {os.path.curdir}")
     prox = subprocess.run(make_args, capture_output=True)
     return prox.stdout.decode('utf-8')
 
@@ -90,6 +111,16 @@ def get_deps_from_make(task_path):
 
     os.chdir(curwd)
     return sorted(set(deps))
+
+
+def get_task_from_deps(deps):
+    ''' given dep,
+        return project-root abs task path
+    '''
+    tasks = [get_task_path(d) for d in deps]
+    return tasks
+
+    # return tasks
 
 
 # ====================================================================
@@ -127,12 +158,6 @@ def dereference_symlink(link):
     ''' returns absolute path of symlink target '''
     return normpath(os.path.join(dirname(link), os.readlink(link)))
 
-
-def is_a_task(taskdir):
-    ''' tests dir for presence of at least one task leaf '''
-    has_input_or_output_or_src = any(exists(os.path.join(taskdir, subdir))
-                                     for subdir in ("input", "output", "src"))
-    return has_input_or_output_or_src
 
 
 def get_symlink_dependencies(task):
