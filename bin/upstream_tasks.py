@@ -140,9 +140,10 @@ def get_tasks_from_deps(base_task, deps):
 
 @preserve_cwd
 def follow_deps(base_task):
+    ''' follow a task's dependencies recursively to the first files '''
     base_task = Path(base_task).resolve()
     deps = get_deps_from_make(base_task)
-    tasks = get_tasks_from_deps(base_task, deps)   # FIXME: what's base_task?
+    tasks = get_tasks_from_deps(base_task, deps)
     base_task = get_task_path(base_task)
     pairs = [(base_task, t) for t in tasks]
     for task in tasks:
