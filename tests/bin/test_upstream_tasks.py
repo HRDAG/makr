@@ -26,12 +26,26 @@ def setup_function():
     os.chdir(MODULE_PATH)
 
 
+def absppath(pth):
+    ''' pth is a string, return abspth '''
+    assert not pth.startswith('/')
+    if not pth.startswith('makr/'):
+        pth = 'makr/' + pth
+    local = list()
+    for p in Path.cwd().parts:
+        if p == 'makr':
+            break
+        local.append(p)
+    pth = Path(*local) / pth
+    return str(pth)
+
+
 def test_test_from_bin():
     assert str(MODULE_PATH).endswith("tests/bin")
 
 
 def test_get_git_root():
-    assert ut.get_git_root() == 'makr'
+    assert ut.get_git_root().endswith('makr')
 
 
 def test_is_a_task_yes():
@@ -43,26 +57,26 @@ def test_is_a_task_no():
 
 
 def test_get_task_path():
-    assert ut.get_task_path('../data/task-2') == 'makr/tests/data/task-2'
+    assert ut.get_task_path('../data/task-2') == absppath('tests/data/task-2')
 
 
 def test_get_task_path_file():
     fname = '../data/task-2/output/cast.csv'
-    assert ut.get_task_path(fname) == 'makr/tests/data/task-2'
+    assert ut.get_task_path(fname) == absppath('tests/data/task-2')
 
 
 def test_get_task_path_symlink():
     symlinked_file = '../data/task-1/input/cast.csv'
-    assert ut.get_task_path(symlinked_file) == 'makr/tests/data/task-0'
+    assert ut.get_task_path(symlinked_file) == absppath('tests/data/task-0')
 
 
 def test_get_task_path_abspath():
     abs_file = str(Path("../data/task-1/input/cast.csv").resolve())
-    assert ut.get_task_path(abs_file) == 'makr/tests/data/task-0'
+    assert ut.get_task_path(abs_file) == absppath('tests/data/task-0')
 
 
 def test_get_task_path_notproj():
-    with pytest.raises(OSError):
+    with pytest.raises(AssertionError):
         ut.get_task_path(Path.home())
 
 
@@ -126,8 +140,8 @@ def test_get_task_from_dep4():
     deps = ut.get_deps_from_make(base_task)
     tasks = ut.get_tasks_from_deps(base_task, deps)
     # NB that task-1/input/cast.csv is symlink
-    assert tasks[0] == 'makr/tests/data/task-0'
-    assert tasks[1] == 'makr/tests/data/task-3'
+    assert tasks[0] == absppath('makr/tests/data/task-0')
+    assert tasks[1] == absppath('makr/tests/data/task-3')
     # note that the third dep is inside task-4 so is filtered
     assert len(tasks) == 2
 
@@ -141,14 +155,17 @@ def test_follow_deps0():
 def test_follow_deps1():
     base_task = "../data/task-1"
     pairs = ut.follow_deps(base_task)
-    assert pairs == [('makr/tests/data/task-1', 'makr/tests/data/task-0')]
+    assert pairs == [(absppath('makr/tests/data/task-1'),
+                      absppath('makr/tests/data/task-0'))]
 
 
 def test_follow_deps2():
     base_task = "../data/task-2"
     pairs = ut.follow_deps(base_task)
-    assert pairs == [('makr/tests/data/task-1', 'makr/tests/data/task-0'),
-                     ('makr/tests/data/task-2', 'makr/tests/data/task-1')]
+    assert pairs == [(absppath('makr/tests/data/task-1'),
+                      absppath('makr/tests/data/task-0')),
+                     (absppath('makr/tests/data/task-2'),
+                      absppath('makr/tests/data/task-1'))]
 
 
 # done.

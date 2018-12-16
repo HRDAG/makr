@@ -78,30 +78,23 @@ def get_git_root():
     prox = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
                           capture_output=True)
     pth = Path(prox.stdout.strip().decode('utf-8'))
-    return pth.parts[-1]
+    return str(pth)
 
 
 def get_task_path(tpath):
     tpath = Path(tpath).resolve()
     opath = tpath                           # for error reporting
-    git_root = get_git_root()
+    git_root = Path(get_git_root())
 
     while tpath.is_file() or not is_a_task(tpath):
         tpath = tpath.parent
         if tpath == tpath.parent or tpath == Path.home():
             raise OSError(f"no task found starting at {opath}")
 
-    proj = deque()
-    while tpath != tpath.parent:
-        proj.appendleft(tpath.parts[-1])
-        if proj[0] == git_root:
-            break
-        tpath = tpath.parent
-    else:
-        raise OSError(f"from {opath}, no git_root ({git_root}) "
-                      f"found in {tpath}")
+    errmsg = f"get_task_path: tpath={tpath} not in git_root={git_root}"
+    assert git_root.parts == tpath.parts[:len(git_root.parts)], errmsg
 
-    return str(Path(*proj))
+    return str(tpath)
 
 
 def exec_make(make_args):
@@ -117,7 +110,7 @@ def exec_make(make_args):
 
 @preserve_cwd
 def get_deps_from_make(task_path):
-    ''' task_path: project_path; relative to cwd; or absolute '''
+    ''' note: this outputs raw strings extracted from make output '''
     os.chdir(task_path)
     assert is_a_task('.')
     db = exec_make(['make', '--dry-run', '--print-data-base'])
@@ -141,9 +134,8 @@ def get_tasks_from_deps(base_task, deps):
     '''
     base_task = Path(base_task).resolve()
     os.chdir(base_task)
-    base_task = get_task_path(base_task)
     tasks = [get_task_path(d) for d in deps]
-    return sorted(set([t for t in tasks if t != base_task]))
+    return sorted(set([t for t in tasks if t != str(base_task)]))
 
 
 @preserve_cwd
@@ -159,6 +151,16 @@ def follow_deps(base_task):
 
 # ====================================================================
 
+    # for pprinting for human reads
+    # proj = deque()
+    # while tpath != tpath.parent:
+    #     proj.appendleft(tpath.parts[-1])
+    #     if proj[0] == git_root:
+    #         break
+    #     tpath = tpath.parent
+    # else:
+    #     raise OSError(f"from {opath}, no git_root ({git_root}) "
+    #                   f"found in {tpath}")
 
 #def topological_sort(dependencies):
 #    """ Takes a list of (a,b) pairs representing a->b dependencies
