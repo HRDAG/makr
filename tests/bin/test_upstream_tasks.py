@@ -121,5 +121,6 @@ def test_get_task_from_dep():
     # NB that task-1/input/cast.csv is symlink
     assert tasks[0] == 'makr/tests/data/task-0'
     assert tasks[1] == 'makr/tests/data/task-3'
+    assert len(tasks) == 2
 
 # done.

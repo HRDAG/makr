@@ -94,7 +94,6 @@ def get_task_path(tpath):
 
     proj = deque()
     while tpath != tpath.parent:
-        # p = tpath.parts[-1]
         proj.appendleft(tpath.parts[-1])
         if proj[0] == git_root:
             break
@@ -141,8 +140,11 @@ def get_tasks_from_deps(base_task, deps):
     ''' given dep,
         return project-root abs task path
     '''
+    base_task = Path(base_task).resolve()
     os.chdir(base_task)
-    return sorted(set([get_task_path(d) for d in deps]))
+    base_task = get_task_path(base_task)
+    tasks = [get_task_path(d) for d in deps]
+    return sorted(set([t for t in tasks if t != base_task]))
 
     # return tasks
 
