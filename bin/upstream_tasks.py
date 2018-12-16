@@ -70,9 +70,8 @@ def is_a_task(taskdir):
     taskdir = Path(taskdir).resolve()
     if not taskdir.is_dir():
         return False
-    has_leaf = any(taskdir.joinpath(subdir).is_dir()
-                   for subdir in task_subdirs)
-    return has_leaf
+    return any(taskdir.joinpath(subdir).is_dir()
+               for subdir in task_subdirs)
 
 
 def get_git_root():
@@ -118,7 +117,7 @@ def exec_make(make_args):
 
 @preserve_cwd
 def get_deps_from_make(task_path):
-    ''' task_path: relative to cwd '''
+    ''' task_path: project_path; relative to cwd; or absolute '''
     os.chdir(task_path)
     assert is_a_task('.')
     db = exec_make(['make', '--dry-run', '--print-data-base'])
@@ -146,78 +145,19 @@ def get_tasks_from_deps(base_task, deps):
     tasks = [get_task_path(d) for d in deps]
     return sorted(set([t for t in tasks if t != base_task]))
 
-    # return tasks
 
+@preserve_cwd
+def follow_deps(base_task):
+    base_task = Path(base_task).resolve()
+    deps = get_deps_from_make(base_task)
+    tasks = get_tasks_from_deps(base_task, deps)   # FIXME: what's base_task?
+    base_task = get_task_path(base_task)
+    pairs = [(base_task, t) for t in tasks]
+    for task in tasks:
+        pairs.extend(follow_deps(task))
+    return sorted(set(pairs))
 
 # ====================================================================
-
-#def filelist(directory):
-#    """Get a list of files in directory, excluding any that start with '.'
-#       Returns absolute paths."""
-#    entries = [e for e in os.listdir(directory) if not e.startswith('.')]
-#    return [abspath(os.path.join(directory, entry)) for entry in entries]
-
-
-#def truncate_to_project(absolute_task_dir):
-#    ''' This task's project path
-#        e.g., for the Syria match task, given
-#           /Users/pball/project/hrdag/SY/match/DCHRS+SCSR+SNHR+VDC/import
-#        return
-#           SY/match/DCHRS+SCSR+SNHR+VDC/import
-#        by walking up from task looking for .git dir
-#    '''
-#    assert absolute_task_dir.startswith("/")
-#    project_top = absolute_task_dir
-#    while True:
-#        entries = set(os.listdir(project_top))
-#        if '.git' in entries and isdir(os.path.join(project_top, '.git')):
-#            project = os.path.basename(project_top)
-#            within_proj_path = absolute_task_dir[(len(project_top) + 1):]
-#            project_dir = os.path.join(project, within_proj_path)
-#            return project_dir
-#        project_top = dirname(project_top)
-#        if project_top == '/':
-#            raise OSError('no .git dir found in path')
-
-
-#def dereference_symlink(link):
-#    ''' returns absolute path of symlink target '''
-#    return normpath(os.path.join(dirname(link), os.readlink(link)))
-
-
-
-#def get_symlink_dependencies(task):
-#    """ With a task, check all symlinks S in /input/:
-#        if S is in /output/, add S's task to list.
-
-#        The input files *not* from /output/ dirs are immutable,
-#        so would not need to be recalculated.
-
-#        NB that there are complete /output/ dirs linked into /input/
-#        so consider that possibility; it affects the trim-to-task step
-
-#        what to do if there's no input/ dir? return list()
-#    """
-#    _output = re.compile('/output.*$')
-#    def trim_to_task(tpath):
-#        ''' discard path after (and including) /output
-#            return None if /output isn't found
-#        '''
-#        if '/output' in tpath:
-#            return _output.sub('', tpath)
-#        else:
-#            return None
-#    input_dir = os.path.join(task, "input")
-#    if not exists(input_dir):
-#        return list()
-#    #print(input_dir, '\n0-\n')
-#    symlink_paths = [path for path in filelist(input_dir) if islink(path)]
-#    # print(symlink_paths, '\n1-\n')
-#    symlink_targets = [dereference_symlink(link) for link in symlink_paths]
-#    # print(symlink_targets, '\n2-\n')
-#    target_tasks = set([trim_to_task(target) for target in symlink_targets])
-#    target_tasks -= {task, None}   # exclude None and self-task
-#    return list(target_tasks)
 
 
 #def topological_sort(dependencies):

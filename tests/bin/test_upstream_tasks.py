@@ -114,13 +114,42 @@ def test_get_deps_from_make_4():
                     'src/write-report.py']
 
 
-def test_get_task_from_dep():
+def test_get_task_from_dep0():
+    base_task = "../data/task-0"
+    deps = ut.get_deps_from_make(base_task)
+    tasks = ut.get_tasks_from_deps(base_task, deps)
+    assert len(tasks) == 0
+
+
+def test_get_task_from_dep4():
     base_task = "../data/task-4"
     deps = ut.get_deps_from_make(base_task)
     tasks = ut.get_tasks_from_deps(base_task, deps)
     # NB that task-1/input/cast.csv is symlink
     assert tasks[0] == 'makr/tests/data/task-0'
     assert tasks[1] == 'makr/tests/data/task-3'
+    # note that the third dep is inside task-4 so is filtered
     assert len(tasks) == 2
 
+
+def test_follow_deps0():
+    base_task = "../data/task-0"
+    pairs = ut.follow_deps(base_task)
+    assert pairs == list()
+
+
+def test_follow_deps1():
+    base_task = "../data/task-1"
+    pairs = ut.follow_deps(base_task)
+    assert pairs == [('makr/tests/data/task-1', 'makr/tests/data/task-0')]
+
+
+def test_follow_deps2():
+    base_task = "../data/task-2"
+    pairs = ut.follow_deps(base_task)
+    assert pairs == [('makr/tests/data/task-1', 'makr/tests/data/task-0'),
+                     ('makr/tests/data/task-2', 'makr/tests/data/task-1')]
+
+
 # done.
+
