@@ -53,9 +53,12 @@ def get_args():
 def is_a_task(taskdir):
     ''' tests dir for presence of at least one task leaf '''
     task_subdirs = ("input", "output", "src", "frozen", "hand")
-    has_input_or_output_or_src = any(Path(taskdir).joinpath(subdir).exists()
-                                     for subdir in task_subdirs)
-    return has_input_or_output_or_src
+    taskdir = Path(taskdir).resolve()
+    if not taskdir.is_dir():
+        return False
+    has_leaf = any(taskdir.joinpath(subdir).is_dir()
+                   for subdir in task_subdirs)
+    return has_leaf
 
 
 def get_git_root():
@@ -66,23 +69,26 @@ def get_git_root():
 
 
 def get_task_path(tpath):
+    import os.path
     tpath = Path(tpath).resolve()
-    opath = tpath   # just for error reporting
+    opath = tpath                           # for error reporting
     git_root = get_git_root()
 
     while tpath.is_file() or not is_a_task(tpath):
         tpath = tpath.parent
-        if tpath == tpath.parent:
+        if tpath == tpath.parent or tpath == Path.home():
             raise OSError(f"no task found starting at {opath}")
 
     proj = deque()
     while tpath != tpath.parent:
-        proj.appendleft(tpath.parts[-1])
-        if proj[0] == git_root:
+        p = tpath.parts[-1]
+        proj.appendleft(p)
+        if p == git_root:
             break
         tpath = tpath.parent
     else:
-        raise OSError(f"no git_root ({git_root}) found in {tpath}")
+        raise OSError(f"from {opath}, no git_root ({git_root}) "
+                      f"found in {tpath}")
 
     return str(Path(*proj))
 
@@ -101,7 +107,6 @@ def exec_make(make_args):
 def get_deps_from_make(task_path):
     ''' task_path: relative to cwd '''
     curwd = Path.cwd()
-    # print(f"get_deps_from_make comes in w curwd={curwd}")
     os.chdir(task_path)
     assert is_a_task('.')
     db = exec_make(['make', '--dry-run', '--print-data-base'])
@@ -119,12 +124,12 @@ def get_deps_from_make(task_path):
     return sorted(set(deps))
 
 
-def get_task_from_deps(deps):
+def get_tasks_from_deps(base_task, deps):
     ''' given dep,
         return project-root abs task path
     '''
-    tasks = [get_task_path(d) for d in deps]
-    return tasks
+    os.chdir(base_task)
+    return sorted(set([get_task_path(d) for d in deps]))
 
     # return tasks
 

@@ -56,6 +56,11 @@ def test_get_task_path_symlink():
     assert ut.get_task_path(symlinked_file) == 'makr/tests/data/task-0'
 
 
+def test_get_task_path_abspath():
+    abs_file = str(Path("../data/task-1/input/cast.csv").resolve())
+    assert ut.get_task_path(abs_file) == 'makr/tests/data/task-0'
+
+
 def test_get_task_path_notproj():
     with pytest.raises(OSError):
         ut.get_task_path(Path.home())
@@ -110,7 +115,9 @@ def test_get_deps_from_make_4():
 
 
 def test_get_task_from_dep():
-    deps = ut.get_deps_from_make("../data/task-4")
-    assert ut.get_task_from_deps(deps) == 'makr/tests/data/task-1'
+    base_task = "../data/task-4"
+    deps = ut.get_deps_from_make(base_task)
+    tasks = ut.get_tasks_from_deps(base_task, deps)
+    assert tasks[0] == 'makr/tests/data/task-0'
 
 # done.
