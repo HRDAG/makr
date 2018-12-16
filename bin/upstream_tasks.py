@@ -28,6 +28,7 @@ import re
 import os
 from pathlib import Path
 import argparse
+import functools
 from collections import deque
 import subprocess
 
@@ -50,6 +51,19 @@ def get_args():
     return parser.parse_args()
 
 
+def preserve_cwd(function):
+    ''' from https://stackoverflow.com/questions/169070/
+            how-do-i-write-a-decorator-that-restores-the-cwd/ '''
+    @functools.wraps(function)
+    def decorator(*args, **kwargs):
+        cwd = Path.cwd()
+        try:
+            return function(*args, **kwargs)
+        finally:
+            os.chdir(cwd)
+    return decorator
+
+
 def is_a_task(taskdir):
     ''' tests dir for presence of at least one task leaf '''
     task_subdirs = ("input", "output", "src", "frozen", "hand")
@@ -69,7 +83,6 @@ def get_git_root():
 
 
 def get_task_path(tpath):
-    import os.path
     tpath = Path(tpath).resolve()
     opath = tpath                           # for error reporting
     git_root = get_git_root()
@@ -81,9 +94,9 @@ def get_task_path(tpath):
 
     proj = deque()
     while tpath != tpath.parent:
-        p = tpath.parts[-1]
-        proj.appendleft(p)
-        if p == git_root:
+        # p = tpath.parts[-1]
+        proj.appendleft(tpath.parts[-1])
+        if proj[0] == git_root:
             break
         tpath = tpath.parent
     else:
@@ -104,9 +117,9 @@ def exec_make(make_args):
     return prox.stdout.decode('utf-8')
 
 
+@preserve_cwd
 def get_deps_from_make(task_path):
     ''' task_path: relative to cwd '''
-    curwd = Path.cwd()
     os.chdir(task_path)
     assert is_a_task('.')
     db = exec_make(['make', '--dry-run', '--print-data-base'])
@@ -120,10 +133,10 @@ def get_deps_from_make(task_path):
             line = line.split(":")[1]
             deps.extend([d.strip() for d in white.split(line) if d.strip()])
 
-    os.chdir(curwd)
     return sorted(set(deps))
 
 
+@preserve_cwd
 def get_tasks_from_deps(base_task, deps):
     ''' given dep,
         return project-root abs task path

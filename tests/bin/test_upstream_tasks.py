@@ -118,6 +118,8 @@ def test_get_task_from_dep():
     base_task = "../data/task-4"
     deps = ut.get_deps_from_make(base_task)
     tasks = ut.get_tasks_from_deps(base_task, deps)
+    # NB that task-1/input/cast.csv is symlink
     assert tasks[0] == 'makr/tests/data/task-0'
+    assert tasks[1] == 'makr/tests/data/task-3'
 
 # done.
