@@ -140,15 +140,53 @@ def get_tasks_from_deps(base_task, deps):
 
 @preserve_cwd
 def follow_deps(base_task):
-    ''' follow a task's dependencies recursively to the first files '''
+    ''' follow a task's dependencies recursively to the first files
+        return pairs (prereq, task)
+    '''
     base_task = Path(base_task).resolve()
     deps = get_deps_from_make(base_task)
     tasks = get_tasks_from_deps(base_task, deps)
     base_task = get_task_path(base_task)
-    pairs = [(base_task, t) for t in tasks]
+    pairs = [(t, base_task) for t in tasks]
     for task in tasks:
         pairs.extend(follow_deps(task))
     return sorted(set(pairs))
+
+
+def topological_sort(deps):
+    """ Takes a list of (a,b) pairs representing a->b deps
+        and returns a sequence of items such that no item in the
+        sequence depends on an earlier item.
+    """
+    def prereqs_of(task):
+        ''' return all prereqs for task '''
+        return set([p for (p, t) in deps if t == task])
+
+    tasks_with_prereqs = set([t for p, t in deps])
+
+    all_tasks = tasks_with_prereqs | set(p for p, t in deps)
+
+    tasks_without_prereqs = all_tasks - tasks_with_prereqs
+    sorted_tasks = list(tasks_without_prereqs)
+
+    while len(sorted_tasks) < len(all_tasks):
+        unsorted_tasks = all_tasks - set(sorted_tasks)
+
+        one_step_downstream_tasks = set([
+            t for t in unsorted_tasks
+            if prereqs_of(t) <= set(sorted_tasks)])
+
+        next_tasks = list(one_step_downstream_tasks)
+        if not next_tasks:
+            errmsg = ("Cycle found in upstream task dependency network. "
+                      "run -L can't tell which task should be run first.")
+            raise RuntimeError(errmsg)
+            # find_and_print_cycle(deps)
+        sorted_tasks.extend(next_tasks)
+
+    return sorted_tasks
+
+
 
 # ====================================================================
 
