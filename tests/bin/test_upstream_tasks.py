@@ -11,9 +11,9 @@
 # execute with pytest test_upstream_tasks.py from this dir
 
 import os
-import os.path
+import time
+import subprocess
 from pathlib import Path
-from pprint import pprint
 import pytest
 import sys
 sys.path.append("../../bin")
@@ -22,11 +22,30 @@ import upstream_tasks as ut
 MODULE_PATH = Path.cwd()
 
 
+def apath(p):
+    p = Path(MODULE_PATH) / '../data' / p
+    return str(p.resolve())
+
+
+OUTPUTS = [apath(p) for p in [
+    'task-0/output/cast.csv',
+    'task-1/output/cast.csv',
+    'task-2/output/cast.csv',
+    'task-3/output/counts.json',
+    'task-3/output/counts-w-agg.json',
+    'task-4/output/report.md',
+    'task-4/output/timings.json',
+]]
+
+
+def get_mtimes():
+    times = {p: Path(p).stat().st_mtime for p in OUTPUTS}
+    return times
+
+
 def setup_function():
     # before every test
     os.chdir(MODULE_PATH)
-
-
 
 
 def absppath(pth):
@@ -101,13 +120,15 @@ def test_exec_make_no_makefile():
 def test_exec_make_db_correct0():
     os.chdir("../data/task-0")   # task-0/Makefile
     db = ut.exec_make(['make', '-n', '--print-data-base'])
-    assert db.startswith("make:")
+    assert "# GNU Make" in db[0:100]
 
 
 def test_exec_make_db_correct1():
+    ''' for symlink: this is tricky bc make fails if target file
+        doesn't exist '''
     os.chdir("../data/task-1")   # task-1/src/Makefile
     db = ut.exec_make(['make', '-n', '--print-data-base'])
-    assert db.startswith("make:")
+    assert "# GNU Make" in db[0:100]
 
 
 def test_get_deps_from_make_0():
@@ -162,7 +183,7 @@ def intpairs(pairs):
 def test_follow_deps1():
     base_task = "../data/task-1"
     obs_pairs = intpairs(ut.follow_deps(base_task))
-    assert [(0, 1)] == intpairs(pairs)
+    assert [(0, 1)] == obs_pairs
 
 
 def test_follow_deps2():
@@ -204,6 +225,28 @@ def test_topo_sort2():
     obs_seq = [int(t[-1:]) for t in obs_q]
     assert obs_seq == [0, 1, 2]
 
+
+def test_remake_clean():
+    prox = subprocess.run(['./reset.sh'], capture_output=False)
+    prox = subprocess.run(['./clean.sh'], capture_output=True)
+    assert prox.returncode == 0
+    ut.make_all("../data/task-4")
+    for output in OUTPUTS:
+        print(output)
+        assert Path(output).exists()
+
+
+def test_remake_1change():
+    prox = subprocess.run(['./reset.sh'], capture_output=False)
+    time.sleep(0.25)
+    prox = subprocess.run(['touch', '../data/task-0/input/cast.csv'],
+                          capture_output=True)
+    assert prox.returncode == 0
+    pre_times = get_mtimes()
+    time.sleep(0.25)
+    ut.make_all("../data/task-4")
+    post_times = get_mtimes()
+    assert all([pre_times[p] < post_times[p] for p in OUTPUTS])
 
 # done.
 

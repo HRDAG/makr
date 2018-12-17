@@ -6,10 +6,11 @@
 # makr/tests/data/task-1/Makefile
 #
 .PHONY: all clean
+
 all: output/cast.csv
+
 clean:
 	rm output/*
-
 
 output/cast.csv: \
 		src/aggregate-roles.py \

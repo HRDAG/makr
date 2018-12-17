@@ -105,7 +105,12 @@ def exec_make(make_args):
     elif not Path('Makefile').exists():
         raise FileNotFoundError(f"Makefile not found in {Path.cwd()}")
     prox = subprocess.run(make_args, capture_output=True)
-    return prox.stdout.decode('utf-8')
+    make_stdout = prox.stdout.decode('utf-8')
+    make_stderr = prox.stderr.decode('utf-8')
+    rc = prox.returncode
+    if rc in [1, 2]:
+        print(f"make returns with {rc} --> {make_stderr}", file=sys.stderr)
+    return make_stdout
 
 
 @preserve_cwd
@@ -186,6 +191,16 @@ def topological_sort(deps):
 
     return sorted_tasks
 
+
+@preserve_cwd
+def make_all(base_task):
+    base_task = Path(base_task).resolve()
+    os.chdir(base_task)
+    pairs = follow_deps(str(base_task))
+    que = topological_sort(pairs)
+    for task in que:
+        os.chdir(task)
+        exec_make(['make'])
 
 
 # ====================================================================
