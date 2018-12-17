@@ -27,6 +27,8 @@ def setup_function():
     os.chdir(MODULE_PATH)
 
 
+
+
 def absppath(pth):
     ''' pth is a string, return abspth '''
     assert not pth.startswith('/')
