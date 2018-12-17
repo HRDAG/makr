@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 ''' given a task, finds all the upstream_tasks, in order '''
-
 # -*- mode: python; fill-column: 79; comment-column: 50 -*-
 #
 # Author(s):  JK, PB
@@ -27,28 +26,11 @@ import sys
 import re
 import os
 from pathlib import Path
-import argparse
 import functools
 from collections import deque
 import subprocess
 
 assert sys.version_info.major >= 3 and sys.version_info.minor >= 2
-
-
-def get_args():
-    ''' read and parse command line arguments '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--starting-task', action="store", required=True,
-                        help="Root task for which to find all"
-                             " prerequisite tasks.")
-    parser.add_argument('-E', '--skip-external-tasks',
-                        dest='required_parent_dir',
-                        action="store", default='/',
-                        metavar='DIR', required=False,
-                        help="Skip tasks External to DIR.")
-    parser.add_argument('-v', '--verbose', action="store_true", default=False,
-                        help="Show dependency search on stderr.")
-    return parser.parse_args()
 
 
 def preserve_cwd(function):
@@ -202,127 +184,5 @@ def make_all(base_task):
         os.chdir(task)
         exec_make(['make'])
 
-
-# ====================================================================
-
-    # for pprinting for human reads
-    # proj = deque()
-    # while tpath != tpath.parent:
-    #     proj.appendleft(tpath.parts[-1])
-    #     if proj[0] == git_root:
-    #         break
-    #     tpath = tpath.parent
-    # else:
-    #     raise OSError(f"from {opath}, no git_root ({git_root}) "
-    #                   f"found in {tpath}")
-
-#def topological_sort(dependencies):
-#    """ Takes a list of (a,b) pairs representing a->b dependencies
-#        and returns a sequence of items such that no item in the
-#        sequence depends on an earlier item.
-#    """
-#    def prereqs_of(task):
-#        ''' return all prereqs for task '''
-#        return set([p for (t, p) in dependencies
-#                    if t == task and is_a_task(p)])
-
-#    all_tasks = (set(t for t, p in dependencies) |
-#                 set(p for t, p in dependencies))
-#    all_tasks = set([task for task in all_tasks if is_a_task(task)])
-
-#    tasks_with_prereqs = set([t for t, p in dependencies])
-#    tasks_without_prereqs = all_tasks - tasks_with_prereqs
-#    sorted_tasks = list(tasks_without_prereqs)
-
-#    while len(sorted_tasks) < len(all_tasks):
-#        unsorted_tasks = all_tasks - set(sorted_tasks)
-#        one_step_downstream_tasks = set([
-#            t for t in unsorted_tasks
-#            if prereqs_of(t) <= set(sorted_tasks)])
-#        next_tasks = list(one_step_downstream_tasks)
-#        if not next_tasks:
-#            sys.stderr.write("Cycle found in upstream task dependency network.\n")
-#            sys.stderr.write("run -L cannot determine which of these tasks should be run first:\n")
-#            find_and_print_cycle(dependencies)
-#            sys.exit(1)
-#        sorted_tasks.extend(next_tasks)
-#    return sorted_tasks
-
-
-#def find_and_print_cycle(dependencies):
-#    """ Assume there at least one cycle in dependencies.  Print
-#        one of the shortest to stderr.
-#    """
-#    starts = [t for (t, p) in dependencies]
-#    paths = [[t] for t in starts]
-#    while True:
-#        extended_paths = list()
-#        for path in paths:
-#            advancing_edge = path[-1]
-#            next_steps = [p for (t, p) in dependencies if t == advancing_edge]
-#            for next_step in next_steps:
-#                extended_path = path+[next_step]
-#                if extended_path[0] == extended_path[-1]:
-#                    cycle = extended_path
-#                    commonprefix = os.path.commonprefix(cycle)
-#                    while commonprefix and commonprefix[-1] != '/':
-#                        commonprefix = commonprefix[:-1]
-#                    common_prefix_length = len(commonprefix)
-#                    for task in cycle:
-#                        msg = "\t{} depends on...\n".format(
-#                            task[common_prefix_length:])
-#                        sys.stderr.write(msg)
-#                    return
-#                extended_paths.append(extended_path)
-#        paths = extended_paths
-#        extended_paths = list()
-
-
-#def find_task_dependencies(starting_task):
-#    ''' from starting_task, recursively search for all prerequisite tasks '''
-#    unexplored_tasks = set([starting_task])
-#    explored_tasks = set()
-#    dependencies = set()
-#    while unexplored_tasks:
-#        task = unexplored_tasks.pop()
-#        task_prerequisites = get_symlink_dependencies(task)
-#        for prereq in task_prerequisites:
-#            if prereq == task or not is_a_task(prereq):
-#                continue
-#            dependencies.add((task, prereq))
-#            if prereq not in explored_tasks:
-#                unexplored_tasks.add(prereq)
-#        explored_tasks.add(task)
-#    return dependencies
-
-
-#def main(starting_task, verbose, required_parent_dir):
-#    ''' called from cmdline invocation '''
-#    dependencies = find_task_dependencies(starting_task)
-#    if verbose:
-#        for (task, prereq) in dependencies:
-#            msg = "{}\tdepends on\t{}\n".format(
-#                truncate_to_project(task), truncate_to_project(prereq))
-#            sys.stderr.write(msg)
-#    dependency_list = topological_sort(dependencies)
-#    execution_list = [path for path in dependency_list if is_a_task(path)]
-#    if verbose:
-#        sys.stderr.write("\nTask execution order\n--------------------\n")
-#    for path in execution_list:
-#        if not path.startswith(required_parent_dir):
-#            continue
-#        if verbose:
-#            sys.stderr.write("%s\n" % truncate_to_project(path))
-#        sys.stdout.write("%s\n" % path)
-
-
-#if __name__ == '__main__':
-#    args = get_args()
-#    if not isdir(os.path.join(args.starting_task, 'input')):
-#        sys.stderr.write("\n  start in a task directory with an input/\n")
-#        sys.exit(1)
-#    main(starting_task=abspath(args.starting_task),
-#         verbose=args.verbose,
-#         required_parent_dir=args.required_parent_dir)
 
 # done.

@@ -1,0 +1,90 @@
+#! /usr/bin/env python3
+#
+# Author(s):  PB
+# Maintainer: PB
+# Created:    20181216
+# License:    (c) 2018 HRDAG, GPL-v2 or greater
+# ============================================
+#
+# :input: path to an HRDAG task
+# :on stdout: list of paths that this task depends from earliest to latest
+# :on stderr: messages about discovered dependencies and execution order
+#             for human consumption, if --verbose
+# ============================================
+
+
+def get_args():
+    ''' read and parse command line arguments '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--starting-task', action="store", required=True,
+                        help="Root task for which to find all"
+                             " prerequisite tasks.")
+    parser.add_argument('-E', '--skip-external-tasks',
+                        dest='required_parent_dir',
+                        action="store", default='/',
+                        metavar='DIR', required=False,
+                        help="Skip tasks External to DIR.")
+    parser.add_argument('-v', '--verbose', action="store_true", default=False,
+                        help="Show dependency search on stderr.")
+    return parser.parse_args()
+
+#def find_and_print_cycle(dependencies):
+#    """ Assume there at least one cycle in dependencies.  Print
+#        one of the shortest to stderr.
+#    """
+#    starts = [t for (t, p) in dependencies]
+#    paths = [[t] for t in starts]
+#    while True:
+#        extended_paths = list()
+#        for path in paths:
+#            advancing_edge = path[-1]
+#            next_steps = [p for (t, p) in dependencies if t == advancing_edge]
+#            for next_step in next_steps:
+#                extended_path = path+[next_step]
+#                if extended_path[0] == extended_path[-1]:
+#                    cycle = extended_path
+#                    commonprefix = os.path.commonprefix(cycle)
+#                    while commonprefix and commonprefix[-1] != '/':
+#                        commonprefix = commonprefix[:-1]
+#                    common_prefix_length = len(commonprefix)
+#                    for task in cycle:
+#                        msg = "\t{} depends on...\n".format(
+#                            task[common_prefix_length:])
+#                        sys.stderr.write(msg)
+#                    return
+#                extended_paths.append(extended_path)
+#        paths = extended_paths
+#        extended_paths = list()
+
+
+
+#def main(starting_task, verbose, required_parent_dir):
+#    ''' called from cmdline invocation '''
+#    dependencies = find_task_dependencies(starting_task)
+#    if verbose:
+#        for (task, prereq) in dependencies:
+#            msg = "{}\tdepends on\t{}\n".format(
+#                truncate_to_project(task), truncate_to_project(prereq))
+#            sys.stderr.write(msg)
+#    dependency_list = topological_sort(dependencies)
+#    execution_list = [path for path in dependency_list if is_a_task(path)]
+#    if verbose:
+#        sys.stderr.write("\nTask execution order\n--------------------\n")
+#    for path in execution_list:
+#        if not path.startswith(required_parent_dir):
+#            continue
+#        if verbose:
+#            sys.stderr.write("%s\n" % truncate_to_project(path))
+#        sys.stdout.write("%s\n" % path)
+
+
+if __name__ == '__main__':
+    args = get_args()
+    # if not isdir(os.path.join(args.starting_task, 'input')):
+    #     sys.stderr.write("\n  start in a task directory with an input/\n")
+    #     sys.exit(1)
+    # main(starting_task=abspath(args.starting_task),
+    #      verbose=args.verbose,
+    #      required_parent_dir=args.required_parent_dir)
+
+# done.

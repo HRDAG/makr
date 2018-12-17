@@ -16,14 +16,13 @@ import subprocess
 from pathlib import Path
 import pytest
 import sys
-sys.path.append("../../bin")
 
-import upstream_tasks as ut
-MODULE_PATH = Path.cwd()
+import makr as ut
+MODULE_PATH = Path.cwd() / 'tests'
 
 
 def apath(p):
-    p = Path(MODULE_PATH) / '../data' / p
+    p = Path(MODULE_PATH) / 'data' / p
     return str(p.resolve())
 
 
@@ -62,8 +61,8 @@ def absppath(pth):
     return str(pth)
 
 
-def test_test_from_bin():
-    assert str(MODULE_PATH).endswith("tests/bin")
+def test_from_testdir():
+    assert str(MODULE_PATH)[-5:] == "tests"
 
 
 def test_get_git_root():
@@ -71,7 +70,7 @@ def test_get_git_root():
 
 
 def test_is_a_task_yes():
-    assert ut.is_a_task('../data/task-0')
+    assert ut.is_a_task('data/task-0')
 
 
 def test_is_a_task_no():
@@ -79,21 +78,21 @@ def test_is_a_task_no():
 
 
 def test_get_task_path():
-    assert ut.get_task_path('../data/task-2') == absppath('tests/data/task-2')
+    assert ut.get_task_path('data/task-2') == absppath('tests/data/task-2')
 
 
 def test_get_task_path_file():
-    fname = '../data/task-2/output/cast.csv'
+    fname = 'data/task-2/output/cast.csv'
     assert ut.get_task_path(fname) == absppath('tests/data/task-2')
 
 
 def test_get_task_path_symlink():
-    symlinked_file = '../data/task-1/input/cast.csv'
+    symlinked_file = 'data/task-1/input/cast.csv'
     assert ut.get_task_path(symlinked_file) == absppath('tests/data/task-0')
 
 
 def test_get_task_path_abspath():
-    abs_file = str(Path("../data/task-1/input/cast.csv").resolve())
+    abs_file = str(Path("data/task-1/input/cast.csv").resolve())
     assert ut.get_task_path(abs_file) == absppath('tests/data/task-0')
 
 
@@ -118,7 +117,7 @@ def test_exec_make_no_makefile():
 
 
 def test_exec_make_db_correct0():
-    os.chdir("../data/task-0")   # task-0/Makefile
+    os.chdir("data/task-0")   # task-0/Makefile
     db = ut.exec_make(['make', '-n', '--print-data-base'])
     assert "# GNU Make" in db[0:100]
 
@@ -126,18 +125,18 @@ def test_exec_make_db_correct0():
 def test_exec_make_db_correct1():
     ''' for symlink: this is tricky bc make fails if target file
         doesn't exist '''
-    os.chdir("../data/task-1")   # task-1/src/Makefile
+    os.chdir("data/task-1")   # task-1/src/Makefile
     db = ut.exec_make(['make', '-n', '--print-data-base'])
     assert "# GNU Make" in db[0:100]
 
 
 def test_get_deps_from_make_0():
-    deps = ut.get_deps_from_make("../data/task-0")
+    deps = ut.get_deps_from_make("data/task-0")
     assert deps == ['input/cast.csv', 'src/letter-counter.py']
 
 
 def test_get_deps_from_make_3():
-    deps = ut.get_deps_from_make("../data/task-3")
+    deps = ut.get_deps_from_make("data/task-3")
     assert deps == ['../task-0/input/cast.csv',
                     '../task-1/output/cast.csv',
                     '../task-2/output/cast.csv',
@@ -146,21 +145,21 @@ def test_get_deps_from_make_3():
 
 
 def test_get_deps_from_make_4():
-    deps = ut.get_deps_from_make("../data/task-4")
+    deps = ut.get_deps_from_make("data/task-4")
     assert deps == ['../task-1/input/cast.csv',
                     '../task-3/output/counts.json',
                     'src/write-report.py']
 
 
 def test_get_task_from_dep0():
-    base_task = "../data/task-0"
+    base_task = "data/task-0"
     deps = ut.get_deps_from_make(base_task)
     tasks = ut.get_tasks_from_deps(base_task, deps)
     assert len(tasks) == 0
 
 
 def test_get_task_from_dep4():
-    base_task = "../data/task-4"
+    base_task = "data/task-4"
     deps = ut.get_deps_from_make(base_task)
     tasks = ut.get_tasks_from_deps(base_task, deps)
     # NB that task-1/input/cast.csv is symlink
@@ -171,7 +170,7 @@ def test_get_task_from_dep4():
 
 
 def test_follow_deps0():
-    base_task = "../data/task-0"
+    base_task = "data/task-0"
     pairs = ut.follow_deps(base_task)
     assert pairs == list()
 
@@ -181,19 +180,19 @@ def intpairs(pairs):
 
 
 def test_follow_deps1():
-    base_task = "../data/task-1"
+    base_task = "data/task-1"
     obs_pairs = intpairs(ut.follow_deps(base_task))
     assert [(0, 1)] == obs_pairs
 
 
 def test_follow_deps2():
-    base_task = "../data/task-2"
+    base_task = "data/task-2"
     obs_pairs = intpairs(ut.follow_deps(base_task))
     assert [(0, 1), (1, 2)] == obs_pairs
 
 
 def test_follow_deps4():
-    base_task = "../data/task-4"
+    base_task = "data/task-4"
     obs_pairs = intpairs(ut.follow_deps(base_task))
     exp_pairs = [(0, 1),  # 1 depends on 0
                  (0, 3),
@@ -219,7 +218,7 @@ def test_topo_sort_cycle():
 
 
 def test_topo_sort2():
-    base_task = "../data/task-2"
+    base_task = "data/task-2"
     pairs = ut.follow_deps(base_task)
     obs_q = ut.topological_sort(pairs)
     obs_seq = [int(t[-1:]) for t in obs_q]
@@ -227,24 +226,24 @@ def test_topo_sort2():
 
 
 def test_remake_clean():
-    prox = subprocess.run(['./reset.sh'], capture_output=False)
-    prox = subprocess.run(['./clean.sh'], capture_output=True)
+    prox = subprocess.run(['./bin/reset.sh'], capture_output=False)
+    prox = subprocess.run(['./bin/clean.sh'], capture_output=True)
     assert prox.returncode == 0
-    ut.make_all("../data/task-4")
+    ut.make_all("data/task-4")
     for output in OUTPUTS:
         print(output)
         assert Path(output).exists()
 
 
 def test_remake_1change():
-    prox = subprocess.run(['./reset.sh'], capture_output=False)
+    prox = subprocess.run(['./bin/reset.sh'], capture_output=False)
     time.sleep(0.25)
-    prox = subprocess.run(['touch', '../data/task-0/input/cast.csv'],
+    prox = subprocess.run(['touch', 'data/task-0/input/cast.csv'],
                           capture_output=True)
     assert prox.returncode == 0
     pre_times = get_mtimes()
     time.sleep(0.25)
-    ut.make_all("../data/task-4")
+    ut.make_all("data/task-4")
     post_times = get_mtimes()
     assert all([pre_times[p] < post_times[p] for p in OUTPUTS])
 
