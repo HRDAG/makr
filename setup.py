@@ -18,7 +18,7 @@ def readme():
 
 
 setup(name='makr',
-      version='0.1-dev',
+      version='0.1-alpha',
       description='make wrapper for principled data processing',
       url='https://github.com/HRDAG/makr',
       author='Patrick Ball',
