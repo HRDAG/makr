@@ -86,6 +86,8 @@ def exec_make(make_args):
         make_args.extend(["--makefile", "src/Makefile"])
     elif not Path('Makefile').exists():
         raise FileNotFoundError(f"Makefile not found in {Path.cwd()}")
+    # TODO: this should either run and capture stdout, or run and echo
+    # stdout and stderr
     prox = subprocess.run(make_args, capture_output=True)
     make_stdout = prox.stdout.decode('utf-8')
     make_stderr = prox.stderr.decode('utf-8')
