@@ -94,8 +94,6 @@ def exec_make(make_args):
         if rc in [1, 2]:
             print(f"make returns with {rc} --> {make_stderr}", file=sys.stderr)
     else:
-        # TODO: this should either run and capture stdout, or run and echo
-        # stdout and stderr
         prox = subprocess.Popen(make_args, shell=False, bufsize=1)
         prox.communicate()
         make_stdout = ''
