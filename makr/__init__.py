@@ -86,14 +86,19 @@ def exec_make(make_args):
         make_args.extend(["--makefile", "src/Makefile"])
     elif not Path('Makefile').exists():
         raise FileNotFoundError(f"Makefile not found in {Path.cwd()}")
-    # TODO: this should either run and capture stdout, or run and echo
-    # stdout and stderr
-    prox = subprocess.run(make_args, capture_output=True)
-    make_stdout = prox.stdout.decode('utf-8')
-    make_stderr = prox.stderr.decode('utf-8')
-    rc = prox.returncode
-    if rc in [1, 2]:
-        print(f"make returns with {rc} --> {make_stderr}", file=sys.stderr)
+    if '--print-data-base' in make_args:
+        prox = subprocess.run(make_args, capture_output=True)
+        make_stdout = prox.stdout.decode('utf-8')
+        make_stderr = prox.stderr.decode('utf-8')
+        rc = prox.returncode
+        if rc in [1, 2]:
+            print(f"make returns with {rc} --> {make_stderr}", file=sys.stderr)
+    else:
+        # TODO: this should either run and capture stdout, or run and echo
+        # stdout and stderr
+        prox = subprocess.Popen(make_args, shell=False, bufsize=1)
+        prox.communicate()
+        make_stdout = ''
     return make_stdout
 
 
