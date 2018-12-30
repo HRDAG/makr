@@ -103,6 +103,29 @@ def exec_make(make_args):
 
 
 @preserve_cwd
+def get_deps_from_make_onetarg(task_path, target):
+    ''' note: this outputs raw strings extracted from make output '''
+    os.chdir(task_path)
+    assert is_a_task('.')
+    db = exec_make(['make', '--dry-run', '--print-data-base'])
+
+    white = re.compile(r'\s+')
+    deps = list()
+    for line in db.split(os.linesep):
+        if not line.startswith(target):
+            continue
+        assert ": " in line, f"no colon found in make db: {line}"
+        line = line.split(":")[1]
+        deps.extend([d.strip() for d in white.split(line) if d.strip()])
+        break
+    else:
+        raise RuntimeError(f"target={target} not found in make rules")
+    # return the files that are ./input/ or ../, don't resolve symlinks
+    deps = [d for d in deps if d.startswith('input/') or d.startswith('../')]
+    return sorted(deps)
+
+
+@preserve_cwd
 def get_deps_from_make(task_path):
     ''' note: this outputs raw strings extracted from make output '''
     os.chdir(task_path)
