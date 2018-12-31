@@ -5,7 +5,7 @@
 # Created:    20181216
 # License:    (c) 2018 HRDAG, GPL-v2 or greater
 #
-# makr/bin/makr
+# makr/bin/getdeps
 # ============================================
 #
 # :input: path to an HRDAG task
@@ -16,43 +16,33 @@
 
 import argparse
 import os
+import sys
 from pathlib import Path
 import makr as ut   # upstream_tasks, if you were wondering
 
 
 def get_args():
     parser = argparse.ArgumentParser(
-        description="runs make, maybe recursively")
+        description=("given starting_task and target,"
+                     " writes file dependencies to stdout"))
 
     parser.add_argument('starting_task', action="store",
                         type=str, default='.', nargs='?',
                         help="task to make")
 
-    parser.add_argument('-r', '--recursive', action="store_true",
-                        default=False, required=False,
-                        help="recurse through dependencies")
+    parser.add_argument('-t', '--target',
+                        required=True, type=str,
+                        help="target in Makefile for dependencies")
 
-    parser.add_argument('-c', '--clean', action="store_true",
-                        default=False, required=False,
-                        help="make clean")
-
-    parser.add_argument('-f', '--force', action="store_true",
-                        default=False, required=False,
-                        help="make clean && make")
-
-    parser.add_argument('-v', '--verbose', action="store_true", default=False,
-                        help="Show dependency search on stderr.")
     return parser.parse_args()
 
 
 def main(args):
     ''' called from cmdline invocation '''
     pth = Path(args.starting_task).resolve()
-    if args.recursive:
-        ut.make_all(str(pth))
-    else:
-        os.chdir(pth)
-        ut.exec_make(['make'])
+    os.chdir(pth)
+    deps = ut.get_deps_from_make(pth, target=args.target)
+    print(' '.join(deps), file=sys.stdout)
 
 
 if __name__ == '__main__':

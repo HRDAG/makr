@@ -80,7 +80,7 @@ def get_task_path(tpath):
 
 
 def exec_make(make_args):
-    ''' in cwd, either `make` or `make -f src/Makefile` '''
+    ''' in cwd, either `make` or `make --makefile src/Makefile` '''
     assert make_args[0] == 'make'
     if Path('src/Makefile').exists():
         make_args.extend(["--makefile", "src/Makefile"])
@@ -101,22 +101,34 @@ def exec_make(make_args):
 
 
 @preserve_cwd
-def get_deps_from_make(task_path):
+def get_deps_from_make(task_path, target=None):
     ''' note: this outputs raw strings extracted from make output '''
     os.chdir(task_path)
     assert is_a_task('.')
     db = exec_make(['make', '--dry-run', '--print-data-base'])
-
-    tofilter = re.compile(r'^%|^#|^make|^\.|^\(%|^all|^clean')
+    # note the re is used w match which assumes start of line
+    tofilter = re.compile(r'(\()*(%|#|make|\.|all|clean)')
     white = re.compile(r'\s+')
     deps = list()
     for line in db.split(os.linesep):
-        # NB: the space after : rules out :=
-        if ": " in line and not tofilter.match(line):
-            line = line.split(":")[1]
-            deps.extend([d.strip() for d in white.split(line) if d.strip()])
-
-    return sorted(set(deps))
+        if ': ' not in line:
+            continue
+        elif tofilter.match(line):
+            continue
+        elif target and not line.startswith(target):
+            continue
+        line = line.split(":", maxsplit=1)[1]
+        deps.extend([d.strip() for d in white.split(line)])
+        if target:
+            isdep = re.compile(r'input/|../')
+            deps = [d for d in deps if isdep.match(d)]
+            break
+    else:
+        if target:
+            errmsg = f"target={target} not found in make rules {deps}"
+            raise RuntimeError(errmsg)
+    # remove empty strings & dups, return sorted list
+    return sorted(set(filter(None, deps)))
 
 
 @preserve_cwd
