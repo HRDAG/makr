@@ -148,7 +148,7 @@ def test_get_deps_from_make_3_onetarg():
     ''' just from one target, get deps from outside task '''
     exp_deps = ["../task-0/input/cast.csv", "../task-2/output/cast.csv"]
     base_task = "data/task-3"
-    deps = ut.get_deps_from_make_onetarg(base_task, 'output/counts-w-agg.json')
+    deps = ut.get_deps_from_make(base_task, target='output/counts-w-agg.json')
     assert exp_deps == deps
 
 
