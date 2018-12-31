@@ -102,29 +102,6 @@ def exec_make(make_args):
     return make_stdout
 
 
-# @preserve_cwd
-# def get_deps_from_make_onetarg(task_path, target):
-#     ''' note: this outputs raw strings extracted from make output '''
-#     os.chdir(task_path)
-#     assert is_a_task('.')
-#     db = exec_make(['make', '--dry-run', '--print-data-base'])
-#
-#     white = re.compile(r'\s+')
-#     deps = list()
-#     for line in db.split(os.linesep):
-#         if not line.startswith(target):
-#             continue
-#         assert ": " in line, f"no colon found in make db: {line}"
-#         line = line.split(":")[1]
-#         deps.extend([d.strip() for d in white.split(line) if d.strip()])
-#         break
-#     else:
-#         raise RuntimeError(f"target={target} not found in make rules")
-#     # return the files that are ./input/ or ../, don't resolve symlinks
-#     deps = [d for d in deps if d.startswith('input/') or d.startswith('../')]
-#     return sorted(deps)
-#
-
 @preserve_cwd
 def get_deps_from_make(task_path, target=None):
     ''' note: this outputs raw strings extracted from make output '''
@@ -132,27 +109,26 @@ def get_deps_from_make(task_path, target=None):
     assert is_a_task('.')
     db = exec_make(['make', '--dry-run', '--print-data-base'])
     # note the re is used w match which assumes start of line
-    tofilter = re.compile(r'%|#|make|\.|\(%|all|clean')
+    tofilter = re.compile(r'(\()*(%|#|make|\.|all|clean)')
     white = re.compile(r'\s+')
-    colon = re.compile(r':')
     deps = list()
     for line in db.split(os.linesep):
-        # NB: the space after : rules out :=
-        if ": " in line and not tofilter.match(line):
-            if target is None:
-                pass
-            elif not line.startswith(target):
-                continue
-            line = colon.split(line, maxsplit=1)[1]
-            deps.extend([d.strip() for d in white.split(line)])
-            if target:
-                isdep = re.compile(r'input/|../')
-                deps = [d for d in deps if isdep.match(d)]
-                break
-
+        if ': ' not in line:
+            continue
+        elif tofilter.match(line):
+            continue
+        elif target and not line.startswith(target):
+            continue
+        line = line.split(":", maxsplit=1)[1]
+        deps.extend([d.strip() for d in white.split(line)])
+        if target:
+            isdep = re.compile(r'input/|../')
+            deps = [d for d in deps if isdep.match(d)]
+            break
     else:
         if target:
-            raise RuntimeError(f"target={target} not found in make rules {deps}")
+            errmsg = f"target={target} not found in make rules {deps}"
+            raise RuntimeError(errmsg)
     # remove empty strings & dups, return sorted list
     return sorted(set(filter(None, deps)))
 
