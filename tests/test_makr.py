@@ -145,16 +145,18 @@ def test_get_deps_from_make_3():
 
 
 def test_get_deps_from_make_1_onetarg():
-    ''' just from one target, get deps from outside task '''
-    exp_deps = ["input/cast.csv"]
+    ''' just from one target, get deps '''
+    exp_deps = ['hand/remapped-roles.json', 'input/cast.csv',
+                'src/aggregate-roles.py']
     base_task = "data/task-1"
     deps = ut.get_deps_from_make(base_task, target='output/cast.csv')
     assert exp_deps == deps
 
 
 def test_get_deps_from_make_3_onetarg():
-    ''' just from one target, get deps from outside task '''
-    exp_deps = ["../task-0/input/cast.csv", "../task-2/output/cast.csv"]
+    ''' just from one target, get deps '''
+    exp_deps = ['../task-0/input/cast.csv', '../task-2/output/cast.csv',
+                'src/count-w-agg.py']
     base_task = "data/task-3"
     deps = ut.get_deps_from_make(base_task, target='output/counts-w-agg.json')
     assert exp_deps == deps

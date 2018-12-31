@@ -120,8 +120,6 @@ def get_deps_from_make(task_path, target=None):
         line = line.split(":", maxsplit=1)[1]
         deps.extend([d.strip() for d in white.split(line)])
         if target:
-            isdep = re.compile(r'input/|../')
-            deps = [d for d in deps if isdep.match(d)]
             break
     else:
         if target:
