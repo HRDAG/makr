@@ -1,5 +1,5 @@
 # makr
-tools for recursive make in principled data processing projects
+tools for recursive make in projects organized by [principled data processing](https://hrdag.org/2016/06/14/the-task-is-a-quantum-of-workflow/).
 
 Install from this directory with `python setup.py install`.
 
