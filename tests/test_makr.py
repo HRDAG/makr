@@ -6,9 +6,9 @@
 # License:    (c) 2018 HRDAG, GPL-v2 or greater
 # ============================================
 #
-# makr/tests/bin/test_upstream_tasks.py
+# makr/tests/test_makr.py
 #
-# execute with pytest test_upstream_tasks.py from this dir
+# execute with `python setup.py test` from git directory
 
 import os
 import time
