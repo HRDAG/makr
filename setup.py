@@ -8,8 +8,11 @@
 #
 # makr/setup.py
 #
-
+import sys
 from setuptools import setup
+
+if sys.version_info < (3, 7):
+    sys.exit("python 3.7 or newer is required")
 
 
 def readme():
@@ -23,6 +26,7 @@ setup(name='makr',
       url='https://github.com/HRDAG/makr',
       author='Patrick Ball',
       author_email='info@hrdag.org',
+      python_requires='>=3.7',
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
       scripts=['bin/makr'],
