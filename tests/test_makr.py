@@ -97,7 +97,7 @@ def test_get_task_path_abspath():
 
 
 def test_get_task_path_notproj():
-    with pytest.raises(AssertionError):
+    with pytest.raises(OSError):
         ut.get_task_path(Path.home())
 
 

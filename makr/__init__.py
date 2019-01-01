@@ -73,8 +73,9 @@ def get_task_path(tpath):
         if tpath == tpath.parent or tpath == Path.home():
             raise OSError(f"no task found starting at {opath}")
 
-    errmsg = f"get_task_path: tpath={tpath} not in git_root={git_root}"
-    assert git_root.parts == tpath.parts[:len(git_root.parts)], errmsg
+    if git_root.parts != tpath.parts[:len(git_root.parts)]:
+        errmsg = f"get_task_path: tpath={tpath} not in git_root={git_root}"
+        raise OSError(errmsg)
 
     return str(tpath)
 
