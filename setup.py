@@ -29,7 +29,7 @@ setup(name='makr',
       python_requires='>=3.7',
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
-      scripts=['bin/makr'],
+      scripts=['bin/makr', 'bin/getdeps'],
       license='GPL-v2 or newer',
       packages=['makr'],
       zip_safe=True)
